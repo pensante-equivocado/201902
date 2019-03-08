@@ -1,0 +1,280 @@
+
+
+
+
+ALTER PROCEDURE APPTAG.usp_Envios_ObtenerDocumentosTransporte --12665
+	@IdEnvio INT
+AS
+BEGIN
+	SELECT env.IDENVIO AS IdEnvio
+		,doc.IDDOCUMENTOTRANSPORTEENVIO AS IdDocumentoTransporteEnvio
+		,env.IDTRANSACCION AS IdTransaccion
+		,env.CODTIPOTRANSACCION As CodTipoTransaccion
+		,env.CODADUANADECLARACION AS CodAduanaDeclaracion
+		,env.ANIOMANIFIESTO AS AnioManifiesto
+		,env.NROMANIFIESTO AS NroManifiesto
+		,doc.NUMERODOCUMENTOTRANSPORTE AS NumeroDocumentoTransporte
+	FROM APPTAG.DOCUMENTOTRANSPORTEENVIO doc
+	INNER JOIN APPTAG.ENVIOS env ON doc.IDENVIO = env.IDENVIO
+END
+GO
+
+
+using System;
+
+namespace DLLMapRe.Entidades.AppTag
+{
+    public class DocumentoTransporteEnvioPorEnvio
+    {
+        public Int32 IdEnvio { get; set; }
+        public Int32 IdDocumentoTransporteEnvio { get; set; }
+        public Int32? IdTransaccion { get; set; }
+        public String CodTipoTransaccion { get; set; }
+        public String CodAduanaDeclaracion { get; set; }
+        public String AnioManifiesto { get; set; }
+        public String NroManifiesto { get; set; }
+        public String NumeroDocumentoTransporte { get; set; }
+    }
+}
+
+
+public class AdDocumentoTransporteEnvio: Logger
+    {
+public List<DocumentoTransporteEnvioPorEnvio> ObtenerPorIdEnvio(Int32 idEnvio)
+        {
+            List<DocumentoTransporteEnvioPorEnvio> resultado = new List<DocumentoTransporteEnvioPorEnvio>();
+            try
+            {
+                const string query = "APPTAG.usp_Envios_ObtenerDocumentosTransporte";//Query.Adquery.ObtenerTipoManifiestoPorCodigo(codigoTipoManifiesto);
+
+                using (var cn = HelperClass.ObtenerConeccion())
+                {
+                    if (cn.State == ConnectionState.Closed)
+                    {
+                        cn.Open();
+                    }
+
+                    resultado = cn.Query<DocumentoTransporteEnvioPorEnvio>(query, new
+                    {
+                        IdEnvio = idEnvio
+                    }, commandType: CommandType.StoredProcedure).ToList();
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log(Level.Error, (ex.InnerException == null ? ex.Message : ex.InnerException.Message));
+            }
+            return resultado;
+        }
+}
+
+
+    public class LnDocumentoTransporteEnvio
+    {
+        private readonly AdDocumentoTransporteEnvio _adDocumentoTransporteEnvio = new AdDocumentoTransporteEnvio();
+
+        public List<DocumentoTransporteEnvioPorEnvio> ObtenerPorIdEnvio(Int32 idEnvio)
+        {
+            return _adDocumentoTransporteEnvio.ObtenerPorIdEnvio(idEnvio);
+        }
+    }
+
+
+
+	public Boolean LeerXmlRespuestaNsigadTemp(string strNombreArchivo, byte[] byteArchivo, Int32 idTransaccionEnvio, ref Entidades.AppTag.Envio objEnvios,
+            ref string refMensaje, int idTransaccionRespuestaObtenidaDesdeWs, ref RESPUESTA respuestaSql, ref DETALLERESPUESTA detalleRespuestaSql)
+        {
+
+		.
+		.
+		.
+		.
+		.
+		.
+		 try
+            {
+                LnEnvio lnEnvio = new LnEnvio();
+                Entidades.AppTag.Envio oEnvio = lnEnvio.ObtenerPorIdTransaccion(idTransaccionEnvio);
+                                   
+                //(from result in dbContext.ENVIOS
+                //                 where result.IDTRANSACCION == idTransaccionEnvio
+                //                 select result).FirstOrDefault();
+
+                objEnvios = oEnvio;
+                if (oEnvio == null)
+                {
+                    //p_RegistrarLog("fbol_RegistrarRespuesta", ENLogTci.TipoMensaje.Error, "No existe el Envio");
+                    Logger.Log(Logger.Level.Error, "No existe el Envio");
+                    return true;
+                }
+
+                LnDocumentoTransporteEnvio lnDocumentoTransporteEnvio = new LnDocumentoTransporteEnvio();
+                var listaDocumentoTransporte = lnDocumentoTransporteEnvio.ObtenerPorIdEnvio(oEnvio.IdEnvio);
+                
+                using (TransactionScope transactionScope = new TransactionScope())
+                {
+
+                    DBAPPTAGSQLEntities dbContext = new DBAPPTAGSQLEntities(ConfigController.Conf.CnEntityFrameworkSql);
+                    respuestaSql = new RESPUESTA();
+                    detalleRespuestaSql = new DETALLERESPUESTA();
+
+					.
+					.
+					.
+					.
+					.
+					                                    //Registrar CanalMaster
+                                    if (listaDocumentoTransporte != null)
+                                    {
+                                        foreach (var transporteEnvioPorEnvio in listaDocumentoTransporte)
+                                        {
+                                            RegistrarCanalMasterTemp(ref dbContext, transporteEnvioPorEnvio, idTransaccionRespuestaObtenidaDesdeWs);
+                                        }
+                                    }
+                                    //RegistrarCanalMasterTemp(ref dbContext, oEnvio, idTransaccionRespuestaObtenidaDesdeWs);
+
+
+
+
+public class LnRespuesta
+private void RegistrarCanalMasterTemp(ref DBAPPTAGSQLEntities dbContext, Entidades.AppTag.DocumentoTransporteEnvioPorEnvio envio, Int32 idTransaccionRespuestaObtenidaDesdeWs)
+        {
+            try
+            {
+                if (envio.CodAduanaDeclaracion.Equals(@"118") && (envio.CodTipoTransaccion.Equals(@"0109") || envio.CodTipoTransaccion.Equals(@"0125")))
+                {
+                    
+                    var canalMaster = new CanalMaster
+                    {
+                        CodigoAduana = envio.CodAduanaDeclaracion,
+                        AnioManifiesto = envio.AnioManifiesto,
+                        NumeroManifiesto = envio.NroManifiesto,
+                        BlMaster = envio.NumeroDocumentoTransporte
+                    };
+
+                    AdCanalMaster adCanalMaster = new AdCanalMaster();
+                    var result = adCanalMaster.RegistrarCanalMasterSql(dbContext, canalMaster, idTransaccionRespuestaObtenidaDesdeWs);
+
+                    Logger.Log(Logger.Level.Info, result.Valor.Equals("success")
+
+                        ? string.Format(@"Manifiesto {0}-{1}-{2} registrado en CanalMaster.",
+                            canalMaster.CodigoAduana, canalMaster.AnioManifiesto,
+                            canalMaster.NumeroManifiesto)
+                        : string.Format(
+                            @"El manifiesto {0}-{1}-{2} ya se encuentra registrado en CanalMaster.",
+                            canalMaster.CodigoAduana, canalMaster.AnioManifiesto,
+                            canalMaster.NumeroManifiesto));
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Logger.Log(Logger.Level.Error,
+                    (String.IsNullOrEmpty(ex.InnerException.Message) ? ex.Message : ex.InnerException.Message));
+            }
+        }
+
+
+
+
+
+
+
+
+.
+.
+.
+.
+.
+.
+private void RegistrarRespuestaAcuseSqlTemp(Int32 idTransaccionEnvio, string strfechaRecepcion, string strticketEnvio,
+            DataTable dtErrores, string strNombreArchivo, byte[] byteArchivo, ref Entidades.AppTag.Envio objEnvios, int idTransaccionRespuestaObtenidaDesdeWs, ref RESPUESTA respuestaSql, ref DETALLERESPUESTA detalleRespuestaSql)
+        {
+            try
+            {
+                LnEnvio lnEnvio = new LnEnvio();
+                Entidades.AppTag.Envio oEnvio = lnEnvio.ObtenerPorIdTransaccion(idTransaccionEnvio);
+                    //(from result in dbContext.ENVIOS
+                    //             where result.IDTRANSACCION == idTransaccionEnvio
+                    //             select result).FirstOrDefault();
+
+                objEnvios = oEnvio;
+
+                using (TransactionScope transactionScope = new TransactionScope())
+                {
+                    DBAPPTAGSQLEntities dbContext = new DBAPPTAGSQLEntities(ConfigController.Conf.CnEntityFrameworkSql);
+                    respuestaSql = new RESPUESTA();
+                    detalleRespuestaSql = new DETALLERESPUESTA();
+
+                    //ACTUALIZAR ENVIO
+                    
+
+                    if (oEnvio == null)
+                    {
+                        //p_RegistrarLog("fbol_RegistrarAcuse", ENLogTci.TipoMensaje.Error, "No existe el Envio");
+                        Logger.Log(Logger.Level.Error, "No existe el Envio");
+                        return;
+                    }
+                    //strNumeroOrden = oEnvio.NUMEROORDEN;
+
+                    if (!String.IsNullOrEmpty(strfechaRecepcion))
+                    {
+                        oEnvio.FechaAcuse = Convert.ToDateTime(strfechaRecepcion);
+                    }
+
+                    oEnvio.NroTicket = strticketEnvio;
+                    oEnvio.IdEstadoAcuse = dtErrores.Rows.Count > 0 ? 8 : 1;
+                    dbContext.SaveChanges();
+                    Logger.Log(Logger.Level.Info,
+                        String.Format("IdTransaccion {0} ; Se actualizó el [ENVIO] en la base de datos segun el ACUSE obtenido; el IdTransaccion del envio es: {1}", idTransaccionRespuestaObtenidaDesdeWs, idTransaccionEnvio));
+                    //FIN ACTUALIZAR ENVIO
+
+                    //SETEAR DATOS DE LA CABECERA DE LA RESPUESTA
+                    respuestaSql.IDENVIO = oEnvio.IdEnvio;
+                    respuestaSql.IDESTADORESPUESTA = dtErrores.Rows.Count > 0 ? 8 : 1;
+                    if (!string.IsNullOrEmpty(strfechaRecepcion))
+                    {
+                        respuestaSql.FECHAACEPTACION = Convert.ToDateTime(strfechaRecepcion);
+                    }
+                    respuestaSql.IDTIPORESPUESTA = 2;
+                    respuestaSql.NOMBREARCHIVO = strNombreArchivo;
+                    respuestaSql.ARCHIVOXML = byteArchivo;
+                    dbContext.RESPUESTA.AddObject(respuestaSql);
+                    dbContext.SaveChanges();
+                    Logger.Log(Logger.Level.Info,
+                        String.Format("IdTransaccion {0} ; Se registro la [RESPUESTA] en la base de datos segun el ACUSE obtenido; el IdTransaccion del envio es: {1}", idTransaccionRespuestaObtenidaDesdeWs, idTransaccionEnvio));
+                    //FIN SETEAR DATOS DE LA CABECERA DE LA RESPUESTA
+
+                    for (int i = 0; i <= dtErrores.Rows.Count - 1; i++)
+                    {
+                        detalleRespuestaSql = new DETALLERESPUESTA();
+                        detalleRespuestaSql.IDRESPUESTA = respuestaSql.IDRESPUESTA;
+                        detalleRespuestaSql.TIPOMENSAJE = 1;
+                        detalleRespuestaSql.CODIGO = dtErrores.Rows[i][0].ToString();
+                        detalleRespuestaSql.DESCRIPCION = dtErrores.Rows[i][1].ToString();
+                        dbContext.DETALLERESPUESTA.AddObject(detalleRespuestaSql);
+                        dbContext.SaveChanges();
+                    }
+                    if (dtErrores.Rows.Count > 0)
+                    {
+                        Logger.Log(Logger.Level.Info,
+                            String.Format(
+                                "IdTransaccion {0} ; Se registro el [DETALLERESPUESTA] en la base de datos segun el ACUSE obtenido; el IdTransaccion del envio es: {1}",
+                                idTransaccionRespuestaObtenidaDesdeWs, idTransaccionEnvio));
+                    }
+
+                    dbContext.Dispose();
+                    transactionScope.Complete();
+                    //p_RegistrarLog("fbol_RegistrarAcuseSQL", ENLogTci.TipoMensaje.Error, "se registro correctamente : " + strNombreArchivo);
+                    //Logger.Log(Logger.Level.Info, "Se registro correctamente : " + strNombreArchivo);
+                }
+            }
+            catch (Exception ex)
+            {
+                //p_RegistrarLog("fbol_RegistrarAcuseSQL", ENLogTci.TipoMensaje.Error, ex.Message);
+                Logger.Log(Logger.Level.Error, ex.Message);
+            }
+        }
+
