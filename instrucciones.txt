@@ -1,0 +1,16 @@
+*Calcular el angulo de inclinacion: razones trigonometricas:
+-CO/H = Seno
+-CA/H = Coseno
+-CO/CA = Tangente
+
+*Segun el angulo hallado, se debera multiplicar en la fuerza
+N=> la normal se hallara de acuerdo al angulo de inclinacion, en caso sea inclinado, debera ser con respecto al seno y coseno del anuglo encontrado.
+Px= P.sin@
+Py= P.cos@
+
+F=m.a.cos@
+F=m.g.cos@
+
+*Proceder a seleccionar automaticamente en el combo, la maquinaria adecuada
+
+*Ademas cada maquinaria debera tener asignado un monto por el servicio para emitir el reporte del monto total
